@@ -22,7 +22,7 @@ export interface OutItem { id: string; source: string; section: string; url: str
 export interface Weather { temp: number | null; max: number | null; sunrise: string; sunset: string; days?: { date: string; min: number; max: number }[] }
 export interface Items { generatedAt: string; leadId: string | null; secondId: string | null; status: string[]; weather: Weather; items: OutItem[] }
 export interface TextItem { id: string; title: string; summary: string }
-export interface Texts { lead_paragraph: string; digest: { id: string; text: string }[]; items: TextItem[] }
+export interface Texts { tagline?: string; lead_paragraph: string; digest: { id: string; text: string }[]; items: TextItem[] }
 
 export function arg(name: string, def: string): string {
   const i = process.argv.indexOf(`--${name}`);

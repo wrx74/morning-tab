@@ -72,7 +72,7 @@ const html = `<!doctype html><html lang="${esc(cfg.lang)}"><head><meta charset="
 <style>${css}</style></head><body><div class="w">
 <div class="top"><span>${esc(L.volume)} ${issueNo}</span>${cfg.nav?.length ? `<nav class="nav">${cfg.nav.map((n) => `<a href="${esc(n.href)}">${esc(n.title)}</a>`).join("")}</nav>` : ""}<span>${esc(cfg.topline)}</span></div>
 <div class="mast"><h1>${esc(cfg.title)}</h1></div>
-<div class="tag">${esc(cfg.tagline)}</div>
+<div class="tag">${esc(tx.tagline?.trim() || cfg.tagline)}</div>
 <div class="date"><span>${esc(dateStr)}</span><span>${esc(L.edition)} · ${hm}</span>${weather ? `<span>${esc(L.weather)}: ${esc(weather)}</span>` : ""}</div>
 <div class="front"><div>${leadHtml}</div><div>${secondHtml}${briefs.map(brief).join("")}</div>
 <aside class="side"><div class="boxx"><h6>${esc(L.digest)}</h6><ol>${digest}</ol></div>
