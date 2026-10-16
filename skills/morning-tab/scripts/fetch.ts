@@ -136,17 +136,40 @@ async function main(): Promise<void> {
   };
   const out: OutItem[] = all.map((i) => ({ id: Bun.hash(i.url).toString(36).slice(0, 8), source: i.source, section: i.section, url: i.url,
     discussUrl: i.discussUrl, points: i.points, comments: i.comments, ageHours: i.date ? Math.round((now - +i.date) / 3600e3) : null,
-    image: i.image, title: i.title, summary: i.summary, extra: i.extra, score: score(i) })).sort((a, b) => b.score - a.score);
+    image: i.image, title: i.title, summary: i.summary, extra: i.extra, score: score(i) }));
+
+  // Jev (TypeSafe): оценка значимости 0–4, если задан TYPESAFE_API_KEY; добавляет до 120 к score.
+  const jevKey = process.env.TYPESAFE_API_KEY;
+  if (jevKey) {
+    const levels = ["шум: не по теме, реклама или мелкий пост", "мелочь: интересно узкому кругу", "заметная новость темы",
+      "важная: крупный релиз, сделка, регулирование или исследование с сильным результатом", "событие дня: меняет расклад в теме"];
+    let ok = 0, fail = "";
+    await pool(out, 8, async (o) => {
+      try {
+        const r = await fetch("https://api.typesafe.ai/v1/systemone", { method: "POST", signal: AbortSignal.timeout(20000),
+          headers: { Authorization: `Bearer ${jevKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ model: "jev-latest", state: { topic: cfg.topline, source: o.source, title: o.title, summary: o.summary.slice(0, 600) },
+            questions: { significance: { type: "score", instructions: `Насколько значим этот материал для читателя ежедневного дайджеста «${cfg.topline}»?`, criteria: levels } } }) });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const a = ((await r.json()) as { answers: { significance: { score: number; confidence: number } } }).answers.significance;
+        o.jev = { score: Math.round(a.score * 100) / 100, confidence: Math.round(a.confidence * 100) / 100 };
+        o.score += Math.round(a.score * 30); ok++;
+      } catch (e) { fail ||= e instanceof Error ? e.message : String(e); }
+    });
+    status.push(`Jev: ${ok}/${out.length}${fail ? ` — ошибка (${fail})` : ""}`);
+  }
+  out.sort((a, b) => b.score - a.score);
   const [l0, l1] = out;
   for (const t of [l0, l1]) if (t) t.body = await bodyText(t.url);
 
-  interface Meteo { current?: { temperature_2m?: number }; daily?: { sunrise?: string[]; sunset?: string[]; temperature_2m_max?: number[] } }
+  interface Meteo { current?: { temperature_2m?: number }; daily?: { sunrise?: string[]; sunset?: string[]; temperature_2m_max?: number[]; temperature_2m_min?: number[]; time?: string[] } }
   const weather: Weather = { temp: null, max: null, sunrise: "—", sunset: "—" };
   if (cfg.city) {
     try { // Open-Meteo: бесплатно, без ключа
-      const u = `https://api.open-meteo.com/v1/forecast?latitude=${cfg.city.lat}&longitude=${cfg.city.lon}&current=temperature_2m&daily=sunrise,sunset,temperature_2m_max&timezone=${encodeURIComponent(cfg.timezone)}&forecast_days=1`;
+      const u = `https://api.open-meteo.com/v1/forecast?latitude=${cfg.city.lat}&longitude=${cfg.city.lon}&current=temperature_2m&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min&timezone=${encodeURIComponent(cfg.timezone)}&forecast_days=5`;
       const w = JSON.parse(await get(u)) as Meteo;
       weather.temp = w.current?.temperature_2m ?? null; weather.max = w.daily?.temperature_2m_max?.[0] ?? null;
+      weather.days = (w.daily?.time ?? []).map((date, n) => ({ date, min: w.daily?.temperature_2m_min?.[n] ?? NaN, max: w.daily?.temperature_2m_max?.[n] ?? NaN }));
       weather.sunrise = w.daily?.sunrise?.[0]?.slice(11) ?? "—"; weather.sunset = w.daily?.sunset?.[0]?.slice(11) ?? "—";
     } catch { /* погода не обязательна */ }
   }

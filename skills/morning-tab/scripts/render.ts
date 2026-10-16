@@ -70,13 +70,14 @@ const html = `<!doctype html><html lang="${esc(cfg.lang)}"><head><meta charset="
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,400&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>${css}</style></head><body><div class="w">
-<div class="top"><span>${esc(L.volume)} ${issueNo}</span><span>${esc(cfg.topline)}</span></div>
+<div class="top"><span>${esc(L.volume)} ${issueNo}</span>${cfg.nav?.length ? `<nav class="nav">${cfg.nav.map((n) => `<a href="${esc(n.href)}">${esc(n.title)}</a>`).join("")}</nav>` : ""}<span>${esc(cfg.topline)}</span></div>
 <div class="mast"><h1>${esc(cfg.title)}</h1></div>
 <div class="tag">${esc(cfg.tagline)}</div>
 <div class="date"><span>${esc(dateStr)}</span><span>${esc(L.edition)} · ${hm}</span>${weather ? `<span>${esc(L.weather)}: ${esc(weather)}</span>` : ""}</div>
 <div class="front"><div>${leadHtml}</div><div>${secondHtml}${briefs.map(brief).join("")}</div>
 <aside class="side"><div class="boxx"><h6>${esc(L.digest)}</h6><ol>${digest}</ol></div>
 <div class="boxx"><h6>${esc(L.almanac)}</h6>${cfg.city ? `<div class="row"><span>${esc(L.sunrise)}</span><b>${w.sunrise}</b></div><div class="row"><span>${esc(L.sunset)}</span><b>${w.sunset}</b></div>` : ""}
+${(w.days ?? []).map((d) => `<div class="row"><span>${esc(new Intl.DateTimeFormat(cfg.locale, { timeZone: "UTC", weekday: "short", day: "numeric", month: "numeric" }).format(new Date(d.date)))}</span><b>${Math.round(d.min)}…${Math.round(d.max)}°</b></div>`).join("")}
 ${counts.map(([t, c]) => `<div class="row"><span>${esc(t)}</span><b>${c}</b></div>`).join("")}</div></aside></div>
 <div class="desks">${sections}</div>
 <footer>${esc(L.footer)}: ${esc(data.status.join(" · "))}</footer>
@@ -87,19 +88,12 @@ writeFileSync(join(SITE, "index.html"), html);
 console.log(`OK: ${SITE}/index.html (${html.length} байт, ${data.items.length} материалов)`);
 
 if (!process.argv.includes("--no-shot")) {
-  try {
-    const { chromium } = await import("playwright");
-    const b = await chromium.launch();
-    const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
-    await p.goto(`file://${join(SITE, "index.html")}`, { waitUntil: "load", timeout: 60000 });
-    await p.evaluate(async () => { for (const im of Array.from(document.images)) im.loading = "eager"; await document.fonts.ready; await new Promise((r) => setTimeout(r, 4000)); });
-    await p.screenshot({ path: join(OUT, "screenshot-top.png") });
-    await p.screenshot({ path: join(OUT, "screenshot.png"), fullPage: true });
-    await b.close();
-    console.log(`OK: ${OUT}/screenshot-top.png, screenshot.png`);
-  } catch (e) {
+  // Скриншот снимает Node (scripts/shot.cjs): под Bun на Windows chromium.launch() зависает.
+  const r = Bun.spawnSync(["node", resolve(import.meta.dir, "shot.cjs"), join(SITE, "index.html"), OUT], { stderr: "pipe", timeout: 120000 });
+  if (r.exitCode !== 0) {
     // Без скриншота проверить страницу нельзя, поэтому код выхода 1.
-    console.error(`Скриншот не снят (${e instanceof Error ? e.message.split("\n")[0] : String(e)}). Установите браузер: bunx playwright install chromium`);
+    console.error(`Скриншот не снят (${r.stderr.toString().trim() || "таймаут"}). Установите браузер: bunx playwright install chromium`);
     process.exit(1);
   }
+  console.log(`OK: ${OUT}/screenshot-top.png, screenshot.png`);
 }

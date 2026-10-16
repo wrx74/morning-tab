@@ -11,15 +11,15 @@ export interface Publish { target: PublishTarget; project?: string; url?: string
 export interface TopicConfig {
   title: string; tagline: string; topline: string; lang: string; locale: string; timezone: string;
   city?: City; keywords: string[]; windowHours: number; sections: Section[]; sources: Source[];
-  labels?: Partial<Labels>; publish?: Publish;
+  labels?: Partial<Labels>; publish?: Publish; nav?: { title: string; href: string }[];
 }
 export interface Labels { digest: string; almanac: string; sunrise: string; sunset: string; edition: string; weather: string; volume: string; discuss: string; via: string; points: string; comments: string; dayUpTo: string; footer: string }
 export const DEFAULT_LABELS: Labels = { digest: "ГЛАВНОЕ ЗА ДЕНЬ", almanac: "АЛЬМАНАХ", sunrise: "Восход", sunset: "Закат", edition: "Утренний выпуск",
   weather: "Метеослужба", volume: "ТОМ I · №", discuss: "ОБСУЖДЕНИЕ", via: "через", points: "очк.", comments: "комм.", dayUpTo: "днём до", footer: "Тексты написаны агентом · Источники" };
 
 export interface OutItem { id: string; source: string; section: string; url: string; discussUrl: string; points: number | null; comments: number | null;
-  ageHours: number | null; image: string; title: string; summary: string; body?: string; extra: string; score: number }
-export interface Weather { temp: number | null; max: number | null; sunrise: string; sunset: string }
+  ageHours: number | null; jev?: { score: number; confidence: number }; image: string; title: string; summary: string; body?: string; extra: string; score: number }
+export interface Weather { temp: number | null; max: number | null; sunrise: string; sunset: string; days?: { date: string; min: number; max: number }[] }
 export interface Items { generatedAt: string; leadId: string | null; secondId: string | null; status: string[]; weather: Weather; items: OutItem[] }
 export interface TextItem { id: string; title: string; summary: string }
 export interface Texts { lead_paragraph: string; digest: { id: string; text: string }[]; items: TextItem[] }
