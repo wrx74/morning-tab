@@ -3,7 +3,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 export type SourceType = "rss" | "hn" | "github-trending";
-export interface Source { name: string; url: string; section: string; limit: number; type?: SourceType; windowHours?: number; boost?: number }
+// keep — сколько лучших материалов источника оставить в выпуске при отборе maxItems (порог minJev всё равно действует).
+export interface Source { name: string; url: string; section: string; limit: number; type?: SourceType; windowHours?: number; boost?: number; keep?: number }
 export interface Section { id: string; title: string }
 export interface City { name: string; lat: number; lon: number }
 export type PublishTarget = "vercel" | "netlify" | "cloudflare" | "gh-pages" | "local";
@@ -29,8 +30,17 @@ export interface TextItem { id: string; title: string; summary: string }
 export interface Texts { tagline?: string; lead_paragraph: string; digest: { id: string; text: string }[]; items: TextItem[] }
 
 // Вход отсортирован по score по убыванию. Материал без оценки Jev (сервис не ответил) порогом не отсеивается.
-export function limitItems<T extends { jev?: { score: number } }>(items: T[], o: { minJev?: number; maxItems?: number }): { items: T[]; dropped: number } {
-  const kept = items.filter((i) => o.minJev === undefined || !i.jev || i.jev.score >= o.minJev).slice(0, o.maxItems ?? Infinity);
+// keep: {источник: N} — N лучших материалов источника занимают места в maxItems первыми, остальные места — по весу.
+export function limitItems<T extends { jev?: { score: number }; source?: string }>(items: T[],
+  o: { minJev?: number; maxItems?: number; keep?: Record<string, number> }): { items: T[]; dropped: number } {
+  const pass = items.filter((i) => o.minJev === undefined || !i.jev || i.jev.score >= o.minJev);
+  const max = o.maxItems ?? Infinity, taken = new Map<string, number>(), chosen = new Set<T>();
+  for (const i of pass) {
+    const k = o.keep?.[i.source ?? ""] ?? 0, n = taken.get(i.source ?? "") ?? 0;
+    if (n < k && chosen.size < max) { chosen.add(i); taken.set(i.source ?? "", n + 1); }
+  }
+  for (const i of pass) if (chosen.size < max) chosen.add(i);
+  const kept = pass.filter((i) => chosen.has(i));
   return { items: kept, dropped: items.length - kept.length };
 }
 

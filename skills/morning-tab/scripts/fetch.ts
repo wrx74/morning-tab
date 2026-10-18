@@ -160,7 +160,8 @@ async function main(): Promise<void> {
   }
   out.sort((a, b) => b.score - a.score);
   if (cfg.minJev !== undefined || cfg.maxItems !== undefined) {
-    const r = limitItems(out, cfg);
+    const keep = Object.fromEntries(cfg.sources.filter((s) => s.keep).map((s) => [s.name, s.keep as number]));
+    const r = limitItems(out, { ...cfg, keep });
     out.splice(0, out.length, ...r.items);
     status.push(`отбор: ${out.length}, отсеяно ${r.dropped}${cfg.minJev !== undefined ? ` (Jev < ${cfg.minJev} или сверх ${cfg.maxItems ?? "∞"})` : ""}`);
   }
