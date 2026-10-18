@@ -22,6 +22,7 @@ a{color:inherit;text-decoration:none}a:hover{text-decoration:underline;text-deco
 .boxx ol{list-style:none;margin:0;padding:0}.boxx li{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--hair);font:13.5px/1.35 "PT Serif",serif}.boxx li:last-child{border:0}
 .boxx .n{color:var(--red);font:700 14px "Playfair Display",serif;min-width:12px}.boxx small{display:block;font:11.5px/1.4 Inter,sans-serif;color:var(--mut);margin-top:3px}
 .row{display:flex;justify-content:space-between;font:12.5px Inter,sans-serif;padding:7px 0;border-bottom:1px solid var(--hair)}.row:last-child{border:0}.row b{font-weight:600}
+.wx{vertical-align:-.32em;margin-right:.3em;color:#3d3a34}.row b{display:inline-flex;align-items:center}
 .desks{columns:3;column-gap:34px;column-rule:1px solid var(--hair);margin-top:26px}
 .desk{break-inside:auto}.deskhead{break-after:avoid;display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--rule);border-bottom:1px solid var(--rule);padding:6px 0;margin:0 0 4px;font:700 19px "Playfair Display",serif}
 .deskhead i{font:500 11px Inter,sans-serif;color:var(--mut);font-style:normal}

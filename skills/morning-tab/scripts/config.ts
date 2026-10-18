@@ -22,7 +22,8 @@ export const DEFAULT_LABELS: Labels = { digest: "ГЛАВНОЕ ЗА ДЕНЬ", 
 export interface OutItem { id: string; source: string; section: string; url: string; discussUrl: string; points: number | null; comments: number | null;
   ageHours: number | null; jev?: { score: number; confidence: number }; image: string; title: string; summary: string; body?: string; extra: string; score: number;
   readerUrl?: string } // readerUrl — чистая страница статьи (Telegraph), если её создал шаг reader
-export interface Weather { temp: number | null; max: number | null; sunrise: string; sunset: string; days?: { date: string; min: number; max: number }[] }
+// code — код погоды WMO из Open-Meteo (значок: солнце, облачно, дождь, снег).
+export interface Weather { temp: number | null; max: number | null; code?: number | null; sunrise: string; sunset: string; days?: { date: string; min: number; max: number; code?: number }[] }
 export interface Items { generatedAt: string; leadId: string | null; secondId: string | null; status: string[]; weather: Weather; items: OutItem[] }
 export interface TextItem { id: string; title: string; summary: string }
 export interface Texts { tagline?: string; lead_paragraph: string; digest: { id: string; text: string }[]; items: TextItem[] }

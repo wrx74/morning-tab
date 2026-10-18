@@ -167,14 +167,14 @@ async function main(): Promise<void> {
   const [l0, l1] = out;
   for (const t of [l0, l1]) if (t) t.body = await bodyText(t.url);
 
-  interface Meteo { current?: { temperature_2m?: number }; daily?: { sunrise?: string[]; sunset?: string[]; temperature_2m_max?: number[]; temperature_2m_min?: number[]; time?: string[] } }
+  interface Meteo { current?: { temperature_2m?: number; weather_code?: number }; daily?: { sunrise?: string[]; sunset?: string[]; temperature_2m_max?: number[]; temperature_2m_min?: number[]; weather_code?: number[]; time?: string[] } }
   const weather: Weather = { temp: null, max: null, sunrise: "—", sunset: "—" };
   if (cfg.city) {
     try { // Open-Meteo: бесплатно, без ключа
-      const u = `https://api.open-meteo.com/v1/forecast?latitude=${cfg.city.lat}&longitude=${cfg.city.lon}&current=temperature_2m&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min&timezone=${encodeURIComponent(cfg.timezone)}&forecast_days=5`;
+      const u = `https://api.open-meteo.com/v1/forecast?latitude=${cfg.city.lat}&longitude=${cfg.city.lon}&current=temperature_2m,weather_code&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min,weather_code&timezone=${encodeURIComponent(cfg.timezone)}&forecast_days=5`;
       const w = JSON.parse(await get(u)) as Meteo;
-      weather.temp = w.current?.temperature_2m ?? null; weather.max = w.daily?.temperature_2m_max?.[0] ?? null;
-      weather.days = (w.daily?.time ?? []).map((date, n) => ({ date, min: w.daily?.temperature_2m_min?.[n] ?? NaN, max: w.daily?.temperature_2m_max?.[n] ?? NaN }));
+      weather.temp = w.current?.temperature_2m ?? null; weather.code = w.current?.weather_code ?? null; weather.max = w.daily?.temperature_2m_max?.[0] ?? null;
+      weather.days = (w.daily?.time ?? []).map((date, n) => ({ date, min: w.daily?.temperature_2m_min?.[n] ?? NaN, max: w.daily?.temperature_2m_max?.[n] ?? NaN, code: w.daily?.weather_code?.[n] }));
       weather.sunrise = w.daily?.sunrise?.[0]?.slice(11) ?? "—"; weather.sunset = w.daily?.sunset?.[0]?.slice(11) ?? "—";
     } catch { /* погода не обязательна */ }
   }

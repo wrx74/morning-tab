@@ -2,6 +2,7 @@
 // Читает out/items.json + out/texts.json, пишет out/site/index.html и скриншоты.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { weatherIcon } from "./weather.ts";
 import { DEFAULT_LABELS, loadConfig, type Items, type OutItem, type TextItem, type Texts } from "./config.ts";
 
 const { cfg, out: OUT } = loadConfig();
@@ -32,7 +33,7 @@ const hm = new Intl.DateTimeFormat(cfg.locale, { timeZone: tz, hour: "2-digit", 
 const issueNo = Math.floor((+d0 - +new Date(`${d0.getUTCFullYear()}-01-01`)) / 86400e3) + 1;
 const w = data.weather;
 const city = cfg.city?.name ?? "";
-const weather = w.temp !== null ? `${city}: ${Math.round(w.temp)}°${w.max !== null ? `, ${L.dayUpTo} ${Math.round(w.max)}°` : ""}` : city;
+const weather = w.temp !== null ? `${esc(city)}: ${weatherIcon(w.code)}${Math.round(w.temp)}°${w.max !== null ? `, ${esc(L.dayUpTo)} ${Math.round(w.max)}°` : ""}` : esc(city); // HTML: значок погоды — SVG
 
 const secTitle = new Map(cfg.sections.map((s) => [s.id, s.title]));
 const kick = (i: OutItem): string => esc(secTitle.get(i.section) ?? i.source).toUpperCase();
@@ -77,11 +78,11 @@ const html = `<!doctype html><html lang="${esc(cfg.lang)}"><head><meta charset="
 <div class="top"><span>${esc(L.volume)} ${issueNo}</span>${cfg.nav?.length ? `<nav class="nav">${cfg.nav.map((n) => `<a href="${esc(n.href)}">${esc(n.title)}</a>`).join("")}</nav>` : ""}<span>${esc(cfg.topline)}</span></div>
 <div class="mast"><h1>${esc(cfg.title)}</h1></div>
 <div class="tag">${esc(tx.tagline?.trim() || cfg.tagline)}</div>
-<div class="date"><span>${esc(dateStr)}</span><span>${esc(L.edition)} · ${hm}</span>${weather ? `<span>${esc(L.weather)}: ${esc(weather)}</span>` : ""}</div>
+<div class="date"><span>${esc(dateStr)}</span><span>${esc(L.edition)} · ${hm}</span>${weather ? `<span>${esc(L.weather)}: ${weather}</span>` : ""}</div>
 <div class="front"><div>${leadHtml}</div><div>${secondHtml}${briefs.map(brief).join("")}</div>
 <aside class="side"><div class="boxx"><h6>${esc(L.digest)}</h6><ol>${digest}</ol></div>
 <div class="boxx"><h6>${esc(L.almanac)}</h6>${cfg.city ? `<div class="row"><span>${esc(L.sunrise)}</span><b>${w.sunrise}</b></div><div class="row"><span>${esc(L.sunset)}</span><b>${w.sunset}</b></div>` : ""}
-${(w.days ?? []).map((d) => `<div class="row"><span>${esc(new Intl.DateTimeFormat(cfg.locale, { timeZone: "UTC", weekday: "short", day: "numeric", month: "numeric" }).format(new Date(d.date)))}</span><b>${Math.round(d.min)}…${Math.round(d.max)}°</b></div>`).join("")}
+${(w.days ?? []).map((d) => `<div class="row"><span>${esc(new Intl.DateTimeFormat(cfg.locale, { timeZone: "UTC", weekday: "short", day: "numeric", month: "numeric" }).format(new Date(d.date)))}</span><b>${weatherIcon(d.code)}${Math.round(d.min)}…${Math.round(d.max)}°</b></div>`).join("")}
 ${counts.map(([t, c]) => `<div class="row"><span>${esc(t)}</span><b>${c}</b></div>`).join("")}</div></aside></div>
 <div class="desks">${sections}</div>
 <footer>${esc(L.footer)}: ${esc(data.status.join(" · "))}</footer>
