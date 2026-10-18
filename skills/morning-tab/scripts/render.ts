@@ -39,9 +39,12 @@ const kick = (i: OutItem): string => esc(secTitle.get(i.section) ?? i.source).to
 const age = (h: number | null): string => h === null ? "" : h < 1 ? "<1h" : h < 24 ? `${h}h` : `${Math.round(h / 24)}d`;
 const by = (i: OutItem): string => [`${L.via} ${i.source}`, i.points !== null ? `${i.points} ${L.points}` : "",
   i.comments !== null ? `${i.comments} ${L.comments}` : "", i.extra, age(i.ageHours)].filter(Boolean).join(" · ").toUpperCase();
-const A = (i: OutItem, inner: string): string => `<a href="${esc(i.url)}" target="_blank" rel="noopener">${inner}</a>`;
-const disc = (i: OutItem): string => i.discussUrl ? ` · <a class="cm" href="${esc(i.discussUrl)}" target="_blank" rel="noopener">${esc(L.discuss)}</a>` : "";
-const IMG = (i: OutItem, cls: string): string => i.image ? `<a class="${cls}" href="${esc(i.url)}" target="_blank" rel="noopener"><img src="${esc(i.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.remove()"></a>` : "";
+// Заголовки и картинки ведут на чистую страницу статьи, если она есть; оригинал — отдельной ссылкой в строке источника.
+const href = (i: OutItem): string => i.readerUrl ?? i.url;
+const A = (i: OutItem, inner: string): string => `<a href="${esc(href(i))}" target="_blank" rel="noopener">${inner}</a>`;
+const disc = (i: OutItem): string => (i.discussUrl ? ` · <a class="cm" href="${esc(i.discussUrl)}" target="_blank" rel="noopener">${esc(L.discuss)}</a>` : "")
+  + (i.readerUrl ? ` · <a class="cm" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(L.original)}</a>` : "");
+const IMG = (i: OutItem, cls: string): string => i.image ? `<a class="${cls}" href="${esc(href(i))}" target="_blank" rel="noopener"><img src="${esc(i.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.remove()"></a>` : "";
 const byId = new Map(data.items.map((i) => [i.id, i]));
 const lead = data.leadId ? byId.get(data.leadId) : undefined;
 const second = data.secondId ? byId.get(data.secondId) : undefined;
