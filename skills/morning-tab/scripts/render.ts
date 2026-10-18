@@ -50,7 +50,7 @@ const briefs = data.items.filter((i) => !used.has(i.id)).slice(0, 4);
 briefs.forEach((i) => used.add(i.id));
 
 const leadHtml = lead ? (() => { const t = T(lead).title; return `<article class="lead">${IMG(lead, "fig big")}<div class="kick">${kick(lead)}</div>
-<h2 style="font-size:${t.length > 90 ? 32 : t.length > 60 ? 37 : 42}px">${A(lead, esc(t))}</h2><p class="body drop">${esc(tx.lead_paragraph)}</p><div class="by">${esc(by(lead))}${disc(lead)}</div></article>`; })() : "";
+<h2 style="--fs:${t.length > 90 ? 32 : t.length > 60 ? 37 : 42}px">${A(lead, esc(t))}</h2><p class="body drop">${esc(tx.lead_paragraph)}</p><div class="by">${esc(by(lead))}${disc(lead)}</div></article>`; })() : "";
 const secondHtml = second ? `<article class="second">${IMG(second, "fig mid")}<div class="kick">${kick(second)}</div><h3>${A(second, esc(T(second).title))}</h3>
 <p class="body">${esc(T(second).summary)}</p><div class="by">${esc(by(second))}${disc(second)}</div></article>` : "";
 const brief = (i: OutItem): string => `<div class="brief">${IMG(i, "thumb")}<h4>${A(i, esc(T(i).title))}</h4><div class="by">${esc(by(i))}${disc(i)}</div></div>`;
