@@ -37,7 +37,8 @@ const weather = w.temp !== null ? `${city}: ${Math.round(w.temp)}°${w.max !== n
 const secTitle = new Map(cfg.sections.map((s) => [s.id, s.title]));
 const kick = (i: OutItem): string => esc(secTitle.get(i.section) ?? i.source).toUpperCase();
 const age = (h: number | null): string => h === null ? "" : h < 1 ? "<1h" : h < 24 ? `${h}h` : `${Math.round(h / 24)}d`;
-const by = (i: OutItem): string => [`${L.via} ${i.source}`, i.points !== null ? `${i.points} ${L.points}` : "",
+// Строка источника: название, оценка значимости Jev (0–4), очки и комментарии HN, возраст.
+const by = (i: OutItem): string => [i.source, i.jev ? `Jev ${i.jev.score.toFixed(1)}` : "", i.points !== null ? `${i.points} ${L.points}` : "",
   i.comments !== null ? `${i.comments} ${L.comments}` : "", i.extra, age(i.ageHours)].filter(Boolean).join(" · ").toUpperCase();
 // Заголовки и картинки ведут на чистую страницу статьи, если она есть; оригинал — отдельной ссылкой в строке источника.
 const href = (i: OutItem): string => i.readerUrl ?? i.url;

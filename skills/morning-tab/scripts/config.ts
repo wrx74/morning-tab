@@ -12,6 +12,8 @@ export interface TopicConfig {
   title: string; tagline: string; topline: string; lang: string; locale: string; timezone: string;
   city?: City; keywords: string[]; windowHours: number; sections: Section[]; sources: Source[];
   labels?: Partial<Labels>; publish?: Publish; nav?: { title: string; href: string }[];
+  // Отбор по важности после оценки Jev: убрать материалы с jev.score < minJev, оставить не больше maxItems самых весомых.
+  minJev?: number; maxItems?: number;
 }
 export interface Labels { digest: string; almanac: string; sunrise: string; sunset: string; edition: string; weather: string; volume: string; discuss: string; via: string; points: string; comments: string; dayUpTo: string; footer: string; original: string }
 export const DEFAULT_LABELS: Labels = { digest: "ГЛАВНОЕ ЗА ДЕНЬ", almanac: "АЛЬМАНАХ", sunrise: "Восход", sunset: "Закат", edition: "Утренний выпуск",
@@ -24,6 +26,12 @@ export interface Weather { temp: number | null; max: number | null; sunrise: str
 export interface Items { generatedAt: string; leadId: string | null; secondId: string | null; status: string[]; weather: Weather; items: OutItem[] }
 export interface TextItem { id: string; title: string; summary: string }
 export interface Texts { tagline?: string; lead_paragraph: string; digest: { id: string; text: string }[]; items: TextItem[] }
+
+// Вход отсортирован по score по убыванию. Материал без оценки Jev (сервис не ответил) порогом не отсеивается.
+export function limitItems<T extends { jev?: { score: number } }>(items: T[], o: { minJev?: number; maxItems?: number }): { items: T[]; dropped: number } {
+  const kept = items.filter((i) => o.minJev === undefined || !i.jev || i.jev.score >= o.minJev).slice(0, o.maxItems ?? Infinity);
+  return { items: kept, dropped: items.length - kept.length };
+}
 
 export function arg(name: string, def: string): string {
   const i = process.argv.indexOf(`--${name}`);

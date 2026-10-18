@@ -2,7 +2,7 @@
 // -> out/items.json + out/texts.template.json (никакого машинного перевода: тексты пишет агент).
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { loadConfig, type OutItem, type Source, type Weather } from "./config.ts";
+import { limitItems, loadConfig, type OutItem, type Source, type Weather } from "./config.ts";
 
 interface Item { source: string; section: string; title: string; url: string; date: Date | null; summary: string; points: number | null; comments: number | null; discussUrl: string; extra: string; image: string; boost: number }
 
@@ -159,6 +159,11 @@ async function main(): Promise<void> {
     status.push(`Jev: ${ok}/${out.length}${fail ? ` — ошибка (${fail})` : ""}`);
   }
   out.sort((a, b) => b.score - a.score);
+  if (cfg.minJev !== undefined || cfg.maxItems !== undefined) {
+    const r = limitItems(out, cfg);
+    out.splice(0, out.length, ...r.items);
+    status.push(`отбор: ${out.length}, отсеяно ${r.dropped}${cfg.minJev !== undefined ? ` (Jev < ${cfg.minJev} или сверх ${cfg.maxItems ?? "∞"})` : ""}`);
+  }
   const [l0, l1] = out;
   for (const t of [l0, l1]) if (t) t.body = await bodyText(t.url);
 
